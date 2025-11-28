@@ -13,7 +13,7 @@ import {
   Scoring,
 } from "@/utils/scoring";
 
-type TableRow = Record<string, string | number> & {
+type TableRow = Record<string, any> & {
   __points: number;
   __rank: number;
 };
@@ -60,16 +60,52 @@ export default function Home() {
         const text = await res.text();
         const { rows: r } = parseCSV(text);
 
-        const computed = r.map((row) => ({
+        // Compute fantasy points
+        const computed: TableRow[] = r.map((row) => ({
           ...row,
           __points: computeFantasyPoints(row, position, scoring),
           __rank: 0,
         }));
 
-        computed.sort((a, b) => b.__points - a.__points);
-        computed.forEach((row, idx) => (row.__rank = idx + 1));
+        // Dedupe by player name within position (keep higher projection)
+        const nameKey =
+          computed.length > 0
+            ? detectPlayerNameKey(
+                Object.fromEntries(
+                  Object.keys(computed[0] as Record<string, any>).map((k) => [
+                    k,
+                    String((computed[0] as Record<string, any>)[k]),
+                  ])
+                )
+              )
+            : null;
 
-        setRows(computed);
+        const byName: Record<string, (typeof computed)[0]> = {};
+        for (const row of computed) {
+          const rawName = nameKey ? String(row[nameKey]) : undefined;
+          const key = (rawName ?? "").toLowerCase().trim();
+          if (!key) {
+            // If no name key, include row as-is with a unique key based on JSON
+            const fallbackKey = JSON.stringify(row).toLowerCase();
+            if (
+              !byName[fallbackKey] ||
+              row.__points > byName[fallbackKey].__points
+            ) {
+              byName[fallbackKey] = row;
+            }
+          } else {
+            if (!byName[key] || row.__points > byName[key].__points) {
+              byName[key] = row;
+            }
+          }
+        }
+
+        const deduped = Object.values(byName);
+
+        deduped.sort((a, b) => b.__points - a.__points);
+        deduped.forEach((row, idx) => (row.__rank = idx + 1));
+
+        setRows(deduped);
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : "Unknown error");
         setRows([]);

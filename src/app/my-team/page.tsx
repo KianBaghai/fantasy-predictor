@@ -77,15 +77,31 @@ export default function MyTeamPage() {
 
           const nameKey = rows.length > 0 ? detectPlayerNameKey(rows[0]) : null;
 
+          // Dedupe by player name within this position (keep higher projection)
+          const byName: Record<
+            string,
+            {
+              row: Record<string, string | number>;
+              points: number;
+              name: string;
+            }
+          > = {};
           rows.forEach((row, idx) => {
-            const name = nameKey ? String(row[nameKey]) : `Player ${idx}`;
+            const rawName = nameKey ? String(row[nameKey]) : `Player ${idx}`;
+            const key = rawName.toLowerCase().trim();
             const points = computeFantasyPoints(row, pos, scoring);
+            if (!byName[key] || points > byName[key].points) {
+              byName[key] = { row, points, name: rawName };
+            }
+          });
+
+          Object.values(byName).forEach((entry, idx) => {
             players.push({
-              id: `${pos}-${name}-${idx}`,
-              name,
+              id: `${pos}-${entry.name}-${idx}`,
+              name: entry.name,
               position: pos,
-              points,
-              raw: row,
+              points: entry.points,
+              raw: entry.row,
             });
           });
         } catch (e) {
