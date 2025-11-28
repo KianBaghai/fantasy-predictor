@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import styles from "./page.module.css";
 import { parseCSV, toNumber } from "@/utils/csv";
 import {
@@ -123,6 +124,9 @@ export default function Home() {
         <header className={styles.header}>
           <h1 className={styles.title}>🏈 Fantasy Football Predictions</h1>
           <p className={styles.subtitle}>2025 Season Projections</p>
+          <Link href="/my-team" className={styles.teamLink}>
+            📋 Build My Team →
+          </Link>
         </header>
 
         <div className={styles.controls}>
