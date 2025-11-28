@@ -160,9 +160,14 @@ export default function Home() {
         <header className={styles.header}>
           <h1 className={styles.title}>🏈 Fantasy Football Predictions</h1>
           <p className={styles.subtitle}>2025 Season Projections</p>
-          <Link href="/my-team" className={styles.teamLink}>
-            📋 Build My Team →
-          </Link>
+          <div className={styles.headerLinks}>
+            <Link href="/draft" className={styles.teamLink}>
+              🎯 Mock Draft →
+            </Link>
+            <Link href="/my-team" className={styles.teamLink}>
+              📋 Build My Team →
+            </Link>
+          </div>
         </header>
 
         <div className={styles.controls}>
